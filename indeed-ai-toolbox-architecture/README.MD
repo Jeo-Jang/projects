@@ -10,19 +10,18 @@
 
 ---
 
-## 📖 Overview & Scope
-The **Enterprise AI Toolbox** is a unified interface that democratizes access to multiple AI providers (OpenAI, Google Gemini) and specialized knowledge agents. It was designed to replace ad-hoc script execution with a secure, managed application environment.
+## 📖 Purpose & Scope
+The **Enterprise AI Toolbox** is an internal, multipage Streamlit application that provides employees with a unified interface to multiple AI providers and specialized tools. It implements authentication-gated access to approximately 20+ distinct functional pages, organized across six primary domains.
 
 ### Key Capabilities
-* **Unified Auth:** Single Sign-On (SSO) via Microsoft Entra ID.
-* **Dual-Provider Strategy:** Routes complex reasoning to **OpenAI (GPT-4/o3)** and multimedia tasks to **Google Gemini (Flash/Veo)**.
-* **Domain Agents:** Specialized agents for **ISO Standards** (Circularity) and **Packaging Validation**.
+* **Dual-Provider Strategy:** Routes complex reasoning/agents to **OpenAI** and multimedia tasks to **Google Gemini**.
+* **Selective Persistence:** Only chat implementations persist conversations to Supabase (`simple_chat.py`), while others operate statelessly to minimize data footprint.
 * **Data Sovereignty:** Full data residency within **Azure Germany West Central**.
 
 ---
 
 ## 🏗️ System Architecture
-The application implements a **Hub-and-Spoke** topology where `streamlit_app.py` acts as the central orchestrator. It manages the global session state and authentication gate before routing users to isolated page modules.
+The application follows a **hub-and-spoke architecture** where `streamlit_app.py` serves as the central orchestrator, managing authentication, page registration, and global state, while individual page modules implement isolated functionality.
 
 ### Application Structure Diagram
 ```mermaid
@@ -43,13 +42,107 @@ graph TD
     IDEMAT -.->|State| Session
 ```
 
-### Design Pattern: Page Registry
-The system avoids hardcoded navigation by using a `PAGES` dictionary registry. This acts as a "Single Source of Truth" for page metadata (Title, Icon, Access Level), enabling dynamic UI construction.
+---
+
+## 🔌 AI Provider Integration Architecture
+The system employs a "Dual-Provider" strategy, routing tasks to specific models based on capability and cost.
+
+```mermaid
+graph LR
+    subgraph "OpenAI Services"
+        GPT4["GPT-4o (Reasoning)"] -->|routes to| Py1["reasoning_chat.py"]
+        Agents["Agents SDK"] -->|routes to| Py2["ISO.py, Packaging.py"]
+        Dalle["DALL-E 3"] -->|routes to| Py3["generate.py"]
+    end
+
+    subgraph "Gemini Services"
+        Flash["Gemini 1.5 Flash"] -->|routes to| Py4["gemini_simple_chat.py"]
+        Veo["Veo 3.1 (Video)"] -->|routes to| Py5["gemini_video.py"]
+        Audio["Gemini Audio"] -->|routes to| Py6["transcription.py"]
+    end
+
+    subgraph "Shared Infrastructure"
+        Py1 & Py2 & Py3 & Py4 & Py5 & Py6 -->|consumes| Secrets["st.secrets API Keys"]
+        Py1 & Py4 -->|persists to| DB["Supabase (PostgreSQL)"]
+    end
+```
+
+---
+
+## 🔄 Application Lifecycle & State Management
+The application initialization sequence ensures a secure and consistent state before rendering UI components. The `st.set_page_config()` call must execute before any other command, followed immediately by the authentication gate.
+
+### Initialization Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant Runtime as Python Runtime
+    participant Config as st.set_page_config()
+    participant Auth as Authentication Check
+    participant Nav as Navigation System
+    participant Page as Selected Page Module
+
+    Runtime->>Config: Set page title, icon, layout
+    Runtime->>Auth: Check st.user.is_logged_in
+    
+    alt Not Logged In
+        Auth->>Runtime: login_screen()
+        Runtime->>Runtime: st.stop()
+        Note over Runtime: Execution Halts Here
+    else Logged In
+        Auth->>Nav: Parse PAGES dict
+        Nav->>Nav: st.navigation(PAGES)
+        Nav->>Page: pg.run()
+        
+        activate Page
+        Page->>Page: Initialize page-specific keys
+        Page->>Page: Render UI Components
+        Page->>Page: Update st.session_state
+        deactivate Page
+    end
+```
+
+---
+
+## 🔒 Authentication & Security
+The application implements mandatory Microsoft Entra ID authentication using Streamlit's built-in SSO capabilities.
+
+### Authentication Flow Diagram
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as streamlit_app.py
+    participant Login as login_screen()
+    participant Entra as Microsoft Entra ID
+
+    User->>App: Navigate to App
+    App->>App: Check st.user.is_logged_in
+
+    opt Not Authenticated
+        App->>Login: Render Prompt
+        Login-->>User: Display "Continue" Button
+        User->>Login: Click "Continue"
+        Login->>Entra: st.login() triggers OIDC Flow
+        Entra-->>User: User Authenticates (MFA)
+        Entra-->>App: Return JWT Token / User Info
+    end
+
+    App->>App: st.stop() released
+    App->>App: pg.run() executes page
+```
+
+### Encryption at Rest
+All data persistence layers utilize **AES-256 encryption**.
+
+| Layer | Method | Key Management |
+| :--- | :--- | :--- |
+| **Streamlit Secrets** | AES-256 | Managed |
+| **Azure Blob Storage** | AES-256 | Microsoft Managed |
+| **Supabase DB** | AES-256 | Supabase Managed |
 
 ---
 
 ## 🤖 Specialized AI Agents: The "Guardrail" Pattern
-The platform utilizes the `openai-agents` framework to deploy autonomous agents. A key architectural pattern is the **Guardrail System**, specifically used in the **ISO Standards Agent**.
+The platform utilizes the `openai-agents` framework. A key architectural pattern is the **Guardrail System**, specifically used in the **ISO Standards Agent**.
 
 ### Agent Architecture (ISO 59020/59010)
 To prevent hallucinations and scope creep, the agent uses a **Pydantic-based Guardrail** before accessing the Vector Database.
@@ -74,50 +167,42 @@ The guardrail enforces structured output using a Pydantic schema (`ISOQueryOutpu
 
 ---
 
-## 🔒 Security & Compliance
-Designed for the German market, the infrastructure strictly adheres to **GDPR** and **Data Residency** requirements.
+## 🧩 Key Design Patterns
+The codebase employs four distinct architectural patterns to ensure scalability and maintainability.
 
-### Network Isolation
-* **Region:** All processing and storage are pinned to **Azure Germany West Central**.
-* **Transport:** HTTP3 with TLS 1.2+ (HSTS Enabled).
-* **VPC:** Streamlit containers run in isolated VPCs with no cross-tenant data mixing.
+### 1. Page Registry Pattern
+The `PAGES` dictionary implements a registry pattern that acts as a **Single Source of Truth** for all page metadata.
+* **Metadata Co-location:** Title, icon, and default page status live alongside the file path.
+* **Dynamic Navigation:** Streamlit constructs the UI directly from this structure.
 
-### Encryption at Rest
-All data persistence layers utilize **AES-256 encryption**:
-| Layer | Method | Key Management |
-| :--- | :--- | :--- |
-| **Streamlit Secrets** | AES-256 | Managed |
-| **Azure Blob Storage** | AES-256 | Microsoft Managed |
-| **Supabase DB** | AES-256 | Supabase Managed |
-
-### Authentication Gate Pattern
-Security is enforced at the entry point using the "Early Termination" pattern:
+### 2. Authentication Gate Pattern
+The authentication check uses early termination to enforce security.
 ```python
 if not st.user.is_logged_in:
     login_screen()
     st.stop() # Prevents execution of ANY subsequent page logic
 ```
 
+### 3. Stateless vs. Stateful Page Pattern
+The codebase employs two distinct persistence strategies:
+
+| Pattern | Implementation | Examples | State Location |
+| :--- | :--- | :--- | :--- |
+| **Stateless** | No database persistence, session state only | `reasoning_chat.py`, `generate.py`, `ISO.py` | `st.session_state` |
+| **Stateful** | Supabase persistence with CRUD operations | `simple_chat.py`, `gemini_simple_chat.py` | PostgreSQL via `supabase_client.py` |
+
 ---
 
 ## 🛠️ Technology Stack
 The application adopts a "best-of-breed" approach, selecting specialized libraries for specific domains.
 
-| Domain | Library | Purpose |
+| Library | Purpose | Usage Context |
 | :--- | :--- | :--- |
-| **Core Framework** | `streamlit` | UI, State Management, Navigation |
-| **Auth** | `Authlib` / `PyJWT` | OIDC integration with Microsoft Entra ID |
-| **AI (Reasoning)** | `openai-agents` | Guardrails, Function Calling (GPT-4o) |
-| **AI (Multimedia)** | `google-genai` | Image/Video generation (Gemini, Veo) |
-| **Database** | `supabase` + `postgrest` | Conversation persistence (PostgreSQL) |
-| **Data Processing** | `pandas` / `openpyxl` | Excel/CSV manipulation |
-
----
-
-## 🔄 Application Lifecycle
-The application initialization sequence ensures a secure and consistent state before rendering UI components.
-
-1.  **Config:** `st.set_page_config()` establishes layout.
-2.  **Auth Check:** Validates OIDC token/session.
-3.  **Registry Parse:** Reads `PAGES` dict to build navigation.
-4.  **Execution:** `pg.run()` executes the selected module in isolation.
+| `streamlit` | Core web framework | All pages, navigation, authentication |
+| `openai-agents` | Agent framework | `ISO.py`, `Packaging.py` |
+| `google-genai` | Gemini API client | All Gemini-powered pages |
+| `supabase` | Database client | Conversation persistence |
+| `postgrest` | PostgreSQL REST API | Underlying Supabase transport |
+| `PyJWT` | JWT operations | Custom token minting in `supabase_client.py` |
+| `Authlib` | OAuth 2.0/OIDC | Microsoft Entra ID integration |
+| `python-docx` | Document generation | Export functionality in chat pages |
