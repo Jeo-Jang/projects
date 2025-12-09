@@ -1,22 +1,36 @@
-# 🛡️ Enterprise AI Toolbox Showcase
+# 🛡️ Generative AI Hub (Indeed AI Toolbox) Showcase
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Enterprise-red)
 ![Azure](https://img.shields.io/badge/Region-Germany%20West%20Central-0078D4)
 ![Security](https://img.shields.io/badge/Security-AES--256-green)
 
-> **Portfolio Showcase:** An internal, multipage GenAI platform architected for **teams of designers, engineers, and strategists**.
-> This repository demonstrates the **Hub-and-Spoke architecture**, **Guardrail patterns**, and **GDPR-compliant infrastructure** used to serve 20+ AI tools to 
+> **Portfolio Showcase:** An internal, multipage GenAI platform architected for **cross-functional innovation teams** (Designers, Engineers, Strategists).
+> This repository demonstrates an **evolving Hub-and-Spoke architecture** built to strict **enterprise-grade standards** (GDPR, SSO, AES-256), serving 20+ specialized AI tools to streamline high-stakes client workflows.
+---
 
 ---
 
 ## 📖 Purpose & Scope
-The **Enterprise AI Toolbox** is an internal, multipage Streamlit application that provides employees with a unified interface to multiple AI providers and specialized tools. It implements authentication-gated access to approximately 20+ distinct functional pages, organized across six primary domains.
+The **Indeed AI Toolbox**(Gen AI Hub) is an internal, multipage Streamlit application that provides employees with a unified interface to multiple AI providers. It implements authentication-gated access to 20+ functional pages, organized across six primary domains:
+
+1.  **Audio Transcription:** Automated speech-to-text pipelines.
+2.  **Image Generation:** OpenAI and Gemini-based image creation.
+3.  **Video Generation:** Content creation using models like Veo.
+4.  **Conversational Chat Systems:** Reasoning and standard chat interfaces.
+5.  **Knowledge-Base Agents:** Specialized agents for ISO standards and compliance.
+6.  **Environmental Data Exploration:** Interfaces for the IDEMAT sustainability database.
+
+**Development Philosophy: Workflow-Centric Evolution**
+Unlike static software suites, this platform functions as a **living ecosystem**. It is developed in tight feedback loops with domain experts, ensuring that every tool maps directly to a specific professional workflow.
 
 ### Key Capabilities
 * **Dual-Provider Strategy:** Routes complex reasoning/agents to **OpenAI** and multimedia tasks to **Google Gemini**.
 * **Selective Persistence:** Only chat implementations persist conversations to Supabase (`simple_chat.py`), while others operate statelessly to minimize data footprint.
+* **Iterative Lifecycle:** The architecture supports rapid prototyping, allowing tools to evolve from "WIP" status to production-hardened modules without disrupting the core system.
 * **Data Sovereignty:** Full data residency within **Azure Germany West Central**.
+
+---
 
 ---
 
@@ -171,19 +185,24 @@ The guardrail enforces structured output using a Pydantic schema (`ISOQueryOutpu
 The codebase employs four distinct architectural patterns to ensure scalability and maintainability.
 
 ### 1. Page Registry Pattern
-The `PAGES` dictionary implements a registry pattern that acts as a **Single Source of Truth** for all page metadata.
-* **Metadata Co-location:** Title, icon, and default page status live alongside the file path.
-* **Dynamic Navigation:** Streamlit constructs the UI directly from this structure.
+The `PAGES` dictionary in `streamlit_app.py` acts as a **Single Source of Truth** for page metadata.
+* **Metadata Co-location:** Title, icon, and access level live alongside the file path.
+* **Dynamic Navigation:** Streamlit constructs the UI directly from this registry, eliminating hardcoded sidebar logic.
 
-### 2. Authentication Gate Pattern
-The authentication check uses early termination to enforce security.
+### 2. Tool Card Registry Pattern
+The `CARDS` dictionary in `home.py` decouples tool discovery from rendering logic.
+* **Separation of Concerns:** Metadata (tags, description, status) is stored separately from the UI components.
+* **Multi-View Rendering:** Allows the same tool data to be rendered in "Category View" or "Workflow View" without code duplication.
+
+### 3. Authentication Gate Pattern
+The authentication check uses the **"Early Termination"** pattern to enforce security at the entry point.
 ```python
 if not st.user.is_logged_in:
     login_screen()
     st.stop() # Prevents execution of ANY subsequent page logic
 ```
 
-### 3. Stateless vs. Stateful Page Pattern
+### 4. Stateless vs. Stateful Page Pattern
 The codebase employs two distinct persistence strategies:
 
 | Pattern | Implementation | Examples | State Location |
