@@ -1,12 +1,12 @@
-# 🛡️ Enterprise AI Toolbox
+# 🛡️ Enterprise AI Toolbox Showcase
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Enterprise-red)
 ![Azure](https://img.shields.io/badge/Region-Germany%20West%20Central-0078D4)
 ![Security](https://img.shields.io/badge/Security-AES--256-green)
 
-> **Portfolio Showcase:** An internal, multipage GenAI platform architected for **[Confidential Enterprise Client]**.
-> This repository demonstrates the **Hub-and-Spoke architecture**, **Guardrail patterns**, and **GDPR-compliant infrastructure** used to serve 20+ AI tools to corporate teams.
+> **Portfolio Showcase:** An internal, multipage GenAI platform architected for **teams of designers, engineers, and strategists**.
+> This repository demonstrates the **Hub-and-Spoke architecture**, **Guardrail patterns**, and **GDPR-compliant infrastructure** used to serve 20+ AI tools to 
 
 ---
 
