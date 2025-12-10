@@ -378,3 +378,15 @@ st.session_state.reasoning_chat = streamlit_openai.Chat(
 ```
 
 ---
+# Related Documents
+| File | Description |
+|------|-------------|
+| [**architecture.md**](.gen-ai-hub/architecture.MD) | High-level system overview, Hub-and-Spoke architecture, lifecycle diagrams |
+| [**chat-systems.md**](./chat-systems.md) | Detailed architecture of all chat interfaces (OpenAI, Gemini, Reasoning Chat, Transcript Chat) |
+| [**agents.md**](./agents.md) | ISO Agent and Packaging Agent architectures, Guardrail system, RAG pipeline |
+| [**authentication.md**](./authentication.md) | Full authentication flow (Entra ID), SSO, JWT, RLS identity mapping |
+| [**persistence.md**](./persistence.md) | Database schema, RLS, CRUD functions, auto-purge retention system |
+| [**heuristics.md**](./heuristics.md) | Gemini auto-thinking heuristics (temperature, thought budget, cost protection) |
+| [**provider-routing.md**](./provider-routing.md) | Dual-provider routing between OpenAI and Gemini, model selection rules |
+| [**patterns.md**](./patterns.md) | Design patterns: Page Registry, Card Registry, Auth Gate, Stateful/Stateless patterns |
+| [**ui-showcase.md**](./ui-showcase.md) | Screenshots, videos, and UI demonstrations for all major tools |

@@ -178,9 +178,14 @@ This allows independent evolution of spokes without breaking the Hub.
 
 ## 8. Related Documents
 
-- `chat-systems.md` — Chat architecture, message flows, persistence, Gemini heuristics.  
-- `agents.md` — ISO agent + guardrail pattern + RAG pipeline.  
-- `authentication.md` — Entra ID SSO flow, AES-256 encryption.  
-- `persistence.md` — Supabase schema, CRUD, RLS.  
-- `heuristics.md` — Temperature + thought-budget auto heuristics.  
-- `patterns.md` — Page registry, tool card registry, auth gate, state patterns.
+| File | Description |
+|------|-------------|
+| [**architecture.md**](gen-ai-hub/architecture.MD) | High-level system overview, Hub-and-Spoke architecture, lifecycle diagrams |
+| [**chat-systems.md**](gen-ai-hub/docs/chat-systems.MD) | Detailed architecture of all chat interfaces (OpenAI, Gemini, Reasoning Chat, Transcript Chat) |
+| [**agents.md**](gen-ai-hub/docs/agents.md) | ISO Agent and Packaging Agent architectures, Guardrail system, RAG pipeline |
+| [**authentication.md**](gen-ai-hub/docs/authentication.md) | Full authentication flow (Entra ID), SSO, JWT, RLS identity mapping |
+| [**persistence.md**](gen-ai-hub/docs/persistence.md) | Database schema, RLS, CRUD functions, auto-purge retention system |
+| [**heuristics.md**](gen-ai-hub/docs/heuristics.md) | Gemini auto-thinking heuristics (temperature, thought budget, cost protection) |
+| [**provider-routing.md**](gen-ai-hub/docs/provider-routing.md) | Dual-provider routing between OpenAI and Gemini, model selection rules |
+| [**patterns.md**](gen-ai-hub/docs/patterns.md) | Design patterns: Page Registry, Card Registry, Auth Gate, Stateful/Stateless patterns |
+| [**ui-showcase.md**](gen-ai-hub/docs/ui-showcase.md) | Screenshots, videos, and UI demonstrations for all major tools |
