@@ -313,7 +313,7 @@ graph LR
     Model[OpenAI o3 model]
     Tools[Tools]
     Sections[_sections list]
-    Export[export_chat_docx()]
+    Export["export_chat_docx()"]
 
     %% Subgraph for Capabilities
     subgraph Caps [Tool Capabilities]
