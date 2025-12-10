@@ -220,13 +220,13 @@ graph TD
         Sidebar[Sidebar Controls]
     end
 
-    subgraph Orchestration Layer (Gemini Chat)
+    subgraph Gemini Chat Orchestration
         Handler[Message Handler]
         
         Handler --> Temp[choose_temperature()]
         Handler --> Budget[choose_thinking_budget()]
         
-        Handler --> Persistence[Supabase CRUD]
+        Handler --> Supabase[Supabase CRUD]
         
         Handler --> History[_build_gemini_history()]
         
@@ -326,8 +326,10 @@ graph TD
     B --> E[_sections list]
     E --> F[export_chat_docx()]
     
-    D -.->|API calls| D
+    D -.-> D
 
+    linkStyle 10 stroke-dasharray: 5, 5;
+    
     style B fill:#f9f,stroke:#333
 ```
 
