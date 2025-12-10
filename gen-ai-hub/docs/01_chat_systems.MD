@@ -306,29 +306,36 @@ The Reasoning Chat system implements a stateful tool-use environment and uses th
 The following diagram illustrates how the Reasoning Chat module integrates the stateful wrapper and configures tool access.
 
 ```mermaid
-graph TD
-    A[reasoning_chat.py] --> B["streamlit_openai.Chat<br>configured with Tools"]
-    
-    subgraph Tool Capabilities
-        C1[allow_code_interpreter=True]
-        C2[allow_file_search=True]
-        C3[allow_web_search=True]
-        C4[allow_image_generation=True]
+graph LR
+    %% Nodes
+    Script[reasoning_chat.py]
+    Chat[streamlit_openai.Chat]
+    Model[OpenAI o3 model]
+    Tools[Tools]
+    Sections[_sections list]
+    Export[export_chat_docx()]
+
+    %% Subgraph for Capabilities
+    subgraph Caps [Tool Capabilities]
+        direction TB
+        Code[allow_code_interpreter=True]
+        File[allow_file_search=True]
+        Web[allow_web_search=True]
+        Img[allow_image_generation=True]
     end
 
-    B --> D[OpenAI o3 model]
-    D --> Tools[Tools]
-    Tools --> C1
-    Tools --> C2
-    Tools --> C3
-    Tools --> C4
-    
-    B --> E[_sections list]
-    E --> F["export_chat_docx()"]
-    
-    D -.-> D
+    %% Flow/Edges
+    Script --> Chat
+    Chat -- API calls --> Model
+    Chat -- configured with --> Tools
+    Chat -- stores in --> Sections
+    Sections --> Export
 
-    style B fill:#f9f,stroke:#333
+    %% connecting capabilities as they appear in the screenshot
+    Model --> Code
+    Tools --> File
+    Tools --> Web
+    Tools --> Img
 ```
 
 ### Key Behaviors
