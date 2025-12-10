@@ -215,22 +215,22 @@ The persistence layer uses two linked tables in Supabase with a **One-to-Many** 
 ```mermaid
 graph TD
     subgraph User Interface Layer
-        Input(st.chat_input)
-        UI_Msg[st.chat_message]
-        Sidebar[Sidebar Controls]
+        Input("st.chat_input")
+        UI_Msg["st.chat_message"]
+        Sidebar["Sidebar Controls"]
     end
 
     subgraph Gemini Chat Orchestration
-        Handler[Message Handler]
+        Handler["Message Handler"]
         
-        Handler --> Temp[choose_temperature()]
-        Handler --> Budget[choose_thinking_budget()]
+        Handler --> Temp["choose_temperature()"]
+        Handler --> Budget["choose_thinking_budget()"]
         
-        Handler --> Supabase[Supabase CRUD]
+        Handler --> Supabase["Supabase CRUD"]
         
-        Handler --> History[_build_gemini_history()]
+        Handler --> History["_build_gemini_history()"]
         
-        Handler --> Stream[generate_content_stream()]
+        Handler --> Stream["generate_content_stream()"]
     end
 
     Input --> Handler
@@ -324,7 +324,7 @@ graph TD
     Tools --> C4
     
     B --> E[_sections list]
-    E --> F[export_chat_docx()]
+    E --> F["export_chat_docx()"]
     
     D -.-> D
 
