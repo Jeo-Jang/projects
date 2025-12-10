@@ -184,5 +184,3 @@ This allows independent evolution of spokes without breaking the Hub.
 - `persistence.md` — Supabase schema, CRUD, RLS.  
 - `heuristics.md` — Temperature + thought-budget auto heuristics.  
 - `patterns.md` — Page registry, tool card registry, auth gate, state patterns.
-
-```
