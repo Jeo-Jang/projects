@@ -150,3 +150,58 @@ sequenceDiagram
     CO2->>State: Update co2e_cumulative_kg
     Handler-->>User: Display eco caption
 ```
+
+### Gemini Chat Message Flow
+
+The following sequence diagram details the execution flow for `gemini_simple_chat.py`. It demonstrates how the system dynamically adjusts generation parameters using **Auto Heuristics**, builds context-aware history, and processes the advanced token stream to separately display thought processes.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Handler as "Message Handler"
+    participant Heuristics as "Auto Heuristics"
+    participant History as "_build_gemini_history()"
+    participant StreamGen as "generate_content_stream()"
+    participant API as "Gemini API"
+    participant State as "st.session_state"
+
+    User->>Handler: user_input
+    
+    %% Heuristics Phase (Dynamic Configuration)
+    Handler->>Heuristics: choose_temperature(user_input)
+    Heuristics-->>Handler: temperature (0.3-0.7)
+    
+    Handler->>Heuristics: choose_thinking_budget(user_input | last_usage)
+    Heuristics-->>Handler: budget (0 | AUTO_MEDIUM_BUDGET | or -1)
+
+    %% History Conversion
+    Handler->>History: _build_gemini_history(messages)
+    activate History
+    History->>History: Convert st.session_state to List[types.Content]
+    History-->>Handler: contents
+    deactivate History
+
+    %% Streaming & Thought Extraction
+    Handler->>StreamGen: generate_content_stream(contents | config)
+    
+    loop Stream chunks
+        StreamGen->>API: Request stream
+        API-->>StreamGen: chunk
+        
+        StreamGen->>StreamGen: Extract thought parts (if include_thoughts)
+        StreamGen->>StreamGen: Extract text parts
+        
+        StreamGen->>User: Display text incrementally
+        
+        StreamGen->>State: Update thoughts in expander
+    end
+    
+    API-->>StreamGen: (final response)
+    
+    StreamGen-->>Handler: full_text, full_thoughts, last_usage
+    
+    %% Persistence and State Update
+    Handler->>Handler: Append assistant message
+    Handler->>Handler: Update co2e_cumulative_kg
+    Handler->>State: Save updated state
+```
