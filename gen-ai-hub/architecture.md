@@ -1,6 +1,14 @@
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-Easy_Deploy-red)
+![Azure](https://img.shields.io/badge/Region-Germany%20West%20Central-darkgreen)
+![Security](https://img.shields.io/badge/Security-AES--256-purple)
+
+
+
 # 🏗️ Gen AI Hub – System Architecture
 
-> This document describes the complete architecture of the **Gen AI Hub (Indeed AI Toolbox)**, including its hub-and-spoke layout, lifecycle flow, navigation, and AI provider integration.
+> **Portfolio Showcase:** An internal, multipage GenAI platform architected for **cross-functional innovation teams** (Designers, Engineers, Strategists).
+> This repository demonstrates an **evolving Hub-and-Spoke architecture** built to strict **enterprise-grade standards** (GDPR, SSO, AES-256), serving 20+ specialized AI tools to streamline high-stakes client workflows.
 
 ---
 
@@ -21,26 +29,40 @@
 
 ---
 
-## 1. Context & Goals
+## 1. Overview
+The **Gen AI Hub** (also referenced internally as the *Indeed AI Toolbox*) is a multipage Streamlit application designed as the central entry point for the organization's AI ecosystem.
 
-The **Gen AI Hub** is an internal, multipage Streamlit application designed as a **single entry point** to a growing ecosystem of AI tools.
+**Primary Objectives:**
+- **Unified Experience:** Consolidates distinct tools into a single, intuitive UX for Designers, Engineers, and Strategists.
+- **Provider Agnosticism:** Centralizes access to top-tier models, implementing a dual-provider strategy that routes complex reasoning to **OpenAI** and multimedia tasks to **Google Gemini**.
+- **Rapid Evolution:** Supports a workflow-centric lifecycle where new tools can be prototyped and hardened behind stable navigation abstractions without disrupting the core system.
 
-**Primary goals:**
+## 2. Security & Architecture
+To ensure compliance and data safety, the platform enforces strict enterprise-grade constraints:
 
-- Provide a **unified UX** for Designers, Engineers, and Strategists.
-- Centralize access to multiple **AI providers** (OpenAI + Gemini).
-- Enforce **enterprise-grade constraints**:
-  - Microsoft Entra ID SSO
-  - AES-256 encryption at rest across layers
-  - Data residency in **Germany West Central**
-  - Minimal and controlled persistence
-- Allow **rapid, workflow-centric evolution**:
-  - New tools can be added without disrupting existing ones.
-  - Existing tools can be refactored behind stable navigation abstractions.
+- **Authentication:** Access is gated via **Microsoft Entra ID SSO** (Azure AD) .
+- **Data Residency:** All data processing is strictly confined to **Germany West Central**.
+- **Encryption:** AES-256 encryption is applied at rest across all application layers.
+- **Persistence Strategy:**
+  - **Stateless Default:** Most tools operate without long-term storage to minimize the data footprint.
+  - **Selective Persistence:** Only specific chat implementations (e.g., `simple_chat.py`) persist conversational history via Supabase(Postgres).
+
+## 3. Functional Scope
+The Hub currently hosts 20+ functional pages categorized into six core domains:
+
+| Domain | Description | Key Tech/Models |
+| :--- | :--- | :--- |
+| **Conversational Chat** | Standard chat interfaces and advanced reasoning chains. | OpenAI |
+| **Knowledge Agents** | Specialized agents for ISO standards and compliance. | RAG / Embeddings |
+| **Audio Transcription** | Automated speech-to-text pipelines. | Whisper / Gemini |
+| **Image Generation** | High-fidelity image creation from prompts. | DALL-E / Gemini |
+| **Video Generation** | Content creation pipelines. | Google Veo |
+| **Sustainability** | Data exploration interfaces for the IDEMAT database. | Data Visualization |
+
 
 ---
 
-## 2. High-Level Hub-and-Spoke Architecture
+## 4. High-Level Hub-and-Spoke Architecture
 
 At the highest level:
 
@@ -56,7 +78,7 @@ At the highest level:
 
 ---
 
-## 3. Application Structure Diagram
+## 5. Application Structure Diagram
 
 The application follows a strict execution flow:  
 **Entry → Authentication → Page Registry → Navigation → Page Execution → Global Resources**
@@ -99,7 +121,7 @@ graph TD
 
 ---
 
-## 4. Application Lifecycle & Initialization
+## 6. Application Lifecycle & Initialization
 
 ```mermaid
 sequenceDiagram
@@ -131,7 +153,7 @@ sequenceDiagram
 
 ---
 
-## 5. AI Provider Integration Architecture
+## 7. AI Provider Integration Architecture
 
 ```mermaid
 graph LR
@@ -155,7 +177,7 @@ graph LR
 
 ---
 
-## 6. Global Resources
+## 8. Global Resources
 
 - `st.user` → OIDC identity  
 - `st.session_state` → persistent per-session context  
@@ -163,7 +185,7 @@ graph LR
 
 ---
 
-## 7. Extensibility Model
+## 9. Extensibility Model
 
 Steps to add a new tool:
 
@@ -176,7 +198,7 @@ This allows independent evolution of spokes without breaking the Hub.
 
 ---
 
-## 8. Related Documents
+## 10. Related Documents
 
 | File | Description |
 |------|-------------|

@@ -1,0 +1,10 @@
+# Ignore generated Word docs
+*.docx
+
+# Ignore virtual environments
+.venv/
+venv/
+
+# Ignore combined md file & code
+combined_docs.md
+combined_markdown.py
