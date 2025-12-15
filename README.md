@@ -19,7 +19,7 @@
 | Project / Module | Domain | Status | Description |
 | :--- | :--- | :--- | :--- |
 | **[Gen AI Hub](gen-ai-hub/architecture.md)** | **GenAI Architecture** | 🟢 **Active** | A GDPR-compliant, Hub-and-Spoke GenAI platform serving 20+ enterprise-grade internal tools. Includes Agentic Development with Pydantic guardrail and Postgres. |
-| **[n8n Automation Workflows](./n8n-workflows)** | **Process Automation** | 🟢 **Active** | Documentation of end-to-end product carbon footprint calculation automation |
+| **[Product Carbon Footprint Automation](./n8n-workflows/product-carbon-footprint/)** | **Process Automation** | 🟢 **Active** | Documentation of end-to-end product carbon footprint calculation automation |
 | **[GCP Data Workflows](./gcp-data-workflows)** | **Data & Analytics** | 🚧 *Planned* | Documentation and code for integrating Google ADK with **BigQuery** for large-scale data synchronization and reporting. |
 
 ---
