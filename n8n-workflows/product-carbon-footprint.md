@@ -97,12 +97,12 @@ This template follows a **Hub + toolchain** pattern:
 ```mermaid
 flowchart LR
   A[Form Trigger\nUpload BoM.xlsx\nScenario + Email] --> B[Extract XLSX\n-> JSON rows]
-  B --> C[Aggregate\n(all rows together)]
+  B --> C["Aggregate\n(all rows together)"]
   C --> D[BoM Normalizer Agent\nmessy -> structured prompt]
   D --> E[Moderator Agent\ncalc + review orchestration]
 
   E --> F[Report Agent\nHTML/Markdown]
-  F --> G[Send Email\n(Outlook/SMTP)]
+  F --> G["Send Email\n(Outlook/SMTP)"]
 
   E --> H[Excel Update Agent\nextract summary table]
   H --> I[Parse JSON schema\n+ split rows]
