@@ -36,12 +36,12 @@
 This also creates **avoidable delays** when inputs are incomplete—work stalls while teams wait for clarifications, despite engineering time being the bottleneck.
 
 **Goal:** Make sLCA/PCF generation **repeatable** and **fast** with a single, reliable pipeline:
-- **upload → compute → review → publish**
+- **upload → compute → review → ideate/share**
 - fewer manual steps, fewer handoff delays, and fewer silent spreadsheet errors.
 
 ## 2) Scope & Limitations
 
-A fair critique of early PCF tools is: “you can’t assume your way to an LCA.” That’s correct—and this workflow does **not** claim otherwise.
+> A fair critique of early PCF tools is: “you can’t assume your way to an LCA.” That’s correct—and this workflow does **not** claim otherwise.
 
 This is a **screening-level / streamlined** estimate used at the **start of product ideation**, when the alternative is usually *no estimate at all* (or weeks of manual back-and-forth). The intent is to provide a **directional signal** for decision-making before anything is manufactured.
 
