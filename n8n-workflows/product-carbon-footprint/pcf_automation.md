@@ -301,19 +301,32 @@ AI **does not**:
 ## Mermaid Diagram (Conceptual Flow)
 
 ```mermaid
-flowchart LR
-  A[User uploads BoM\n+ project context] --> B[n8n Form Trigger]
-  B --> C[Extract BoM rows]
-  C --> D[Deterministic BoM normalization\n(clean headers, qty, mass, distance)]
-  D --> E[AI enrichment\n(material category, mass estimate,\nprocess hint, region inference)]
-  E --> F[Baseline EoL modeling\n(region × material family)]
-  F --> G[IDEMAT material factor mapping]
-  G --> H[Clean baseline table]
-  H --> I[n8n_PCF_sketch.xlsx\nsLCA sheet]
-  I --> J[sLCA_V3.xlsx\nScenario workspace]
-  J --> K[Human decisions:\nprocess, transport, EoL]
-  K --> L[Scenario exploration:\nmaterial change,\nmanufacturing change,\nbusiness model change]
-  L --> M[Future:\nR-strategy comparison\nbreak-even analysis]
+%%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 30, 'rankSpacing': 30}} }%%
+flowchart TB
+
+subgraph Row1[" "]
+  direction LR
+  A["User uploads BoM + project context"] --> B["n8n Form Trigger"] --> C["Extract BoM rows"] --> D["Deterministic BoM normalization clean headers qty mass distance"]
+end
+
+subgraph Row2[" "]
+  direction RL
+  E["AI enrichment material category mass estimate process hint region inference"] --> F["Baseline EoL modeling region x material family"] --> G["IDEMAT material factor mapping"] --> H["Clean baseline table"]
+end
+
+subgraph Row3[" "]
+  direction LR
+  I["n8n_PCF_sketch.xlsx sLCA sheet"] --> J["sLCA_V3.xlsx Scenario workspace"] --> K["Human decisions process transport EoL"] --> L["Scenario exploration material change manufacturing change business model change"]
+end
+
+subgraph Row4[" "]
+  direction LR
+  M["Future R strategy comparison break even analysis"]
+end
+
+D --> E
+H --> I
+L --> M
 ```
 
 ---
