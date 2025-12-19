@@ -144,6 +144,45 @@ Enable structured comparison between:
 
 ---
 
+## Sequence Diagram
+
+sequenceDiagram
+  participant U as User
+  participant N as n8n Workflow
+  participant P as Extract XLSX to Rows
+  participant D as Deterministic Cleaner
+  participant A as AI Normalizer Agent
+  participant EOL as EoL Modeler
+  participant I as IDEMAT Mapper
+  participant X as n8n_PCF_sketch.xlsx sLCA
+  participant S as sLCA_V3.xlsx Scenario Workspace
+  participant H as Human Reviewer
+
+  U->>N: Submit form BoM.xlsx + scenario + project context
+  N->>P: Extract XLSX to JSON rows
+  P-->>N: BoM rows
+
+  N->>D: Normalize headers qty mass distance tokens
+  D-->>N: Clean intermediate rows
+
+  N->>A: Enrich rows material category mass estimate process hint region
+  A-->>N: Structured baseline rows
+
+  N->>EOL: Model baseline EoL if not truly declared
+  EOL-->>N: Baseline EoL shares
+
+  N->>I: Map to IDEMAT material factors
+  I-->>N: idemat factor or mapping warnings
+
+  N->>X: Append baseline table rows
+  X-->>S: sLCA_V3 captures updated baseline
+
+  S-->>H: Baseline is ready for confirmation
+  H->>S: Select manufacturing processes transport legs EoL finalization
+
+  H->>S: Build scenarios material change manufacturing change business model change
+  Note over H,S: Future extension adds R strategy comparison and break even analysis
+
 ## Files and Data Flow
 
 ### Files
@@ -301,19 +340,32 @@ AI **does not**:
 ## Mermaid Diagram (Conceptual Flow)
 
 ```mermaid
-flowchart LR
-  A[User uploads BoM\n+ project context] --> B[n8n Form Trigger]
-  B --> C[Extract BoM rows]
-  C --> D[Deterministic BoM normalization\n(clean headers, qty, mass, distance)]
-  D --> E[AI enrichment\n(material category, mass estimate,\nprocess hint, region inference)]
-  E --> F[Baseline EoL modeling\n(region × material family)]
-  F --> G[IDEMAT material factor mapping]
-  G --> H[Clean baseline table]
-  H --> I[n8n_PCF_sketch.xlsx\nsLCA sheet]
-  I --> J[sLCA_V3.xlsx\nScenario workspace]
-  J --> K[Human decisions:\nprocess, transport, EoL]
-  K --> L[Scenario exploration:\nmaterial change,\nmanufacturing change,\nbusiness model change]
-  L --> M[Future:\nR-strategy comparison\nbreak-even analysis]
+%%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 30, 'rankSpacing': 30}} }%%
+flowchart TB
+
+subgraph Row1[" "]
+  direction LR
+  A["User uploads BoM + project context"] --> B["n8n Form Trigger"] --> C["Extract BoM rows"] --> D["Deterministic BoM normalization clean headers qty mass distance"]
+end
+
+subgraph Row2[" "]
+  direction RL
+  E["AI enrichment material category mass estimate process hint region inference"] --> F["Baseline EoL modeling region x material family"] --> G["IDEMAT material factor mapping"] --> H["Clean baseline table"]
+end
+
+subgraph Row3[" "]
+  direction LR
+  I["n8n_PCF_sketch.xlsx sLCA sheet"] --> J["sLCA_V3.xlsx Scenario workspace"] --> K["Human decisions process transport EoL"] --> L["Scenario exploration material change manufacturing change business model change"]
+end
+
+subgraph Row4[" "]
+  direction LR
+  M["Future R strategy comparison break even analysis"]
+end
+
+D --> E
+H --> I
+L --> M
 ```
 
 ---
@@ -332,4 +384,339 @@ flowchart LR
 ## Summary
 This system is a **baseline and scenario engine**, not a reporting tool.  
 Its strength is not in producing a single number, but in enabling **better questions, better comparisons, and better decisions** about how to reduce PCF over time.
+
+# Appendix — Baseline Assumptions Embedded in the Workflow
+(derived from prompt logic + deterministic code nodes)
+
+This appendix documents the **baseline assumptions that are hard-coded or implicitly enforced** by the current n8n workflow (ExtractData, BoM Maker prompt, EoL_Modeler_Deterministic, IDEMAT Agent).  
+
+These assumptions define what “baseline PCF” means in this system.
+
+They are **intentional**, **conservative**, and **designed to be overridden by humans** when better information is available.
+
+---
+
+## A. Structural & Modeling Philosophy (Meta-Assumptions)
+
+1. **Baseline-first principle**
+   - The workflow always aims to produce *a complete baseline*, even if inputs are incomplete.
+   - Missing data is filled with deterministic assumptions rather than leaving blanks.
+
+2. **Determinism over creativity**
+   - Same inputs must produce the same outputs.
+   - AI is constrained by rules, schemas, and fallback logic.
+
+3. **Conservative defaults**
+   - Defaults are chosen to avoid optimistic underestimation.
+   - Where uncertainty exists, assumptions are logged explicitly.
+
+4. **Explicit assumption logging**
+   - Every inferred or assumed value must be recorded in:
+     - `applied_assumptions`
+     - or `mapping_warnings`
+
+---
+
+## B. BoM Structure & Quantity Assumptions
+
+### B1. Unit of Measure (UOM)
+**Assumption**
+- If UOM is missing, invalid, or polluted by transport tokens (e.g. “Air”, “Truck”), UOM is forced to `ea`.
+
+**Rationale**
+- Engineering BoMs often misuse UOM columns.
+- `ea` is the safest baseline for component counting.
+
+**Logged as**
+- `uom.cleaned: invalid_mode_token->ea`
+- or `uom.assumed: ea`
+
+---
+
+### B2. Quantity
+**Assumption**
+- If quantity is missing or unparsable → quantity = 1.
+
+**Rationale**
+- Prevents accidental zero-mass or zero-impact rows.
+- Reflects “at least one component exists”.
+
+---
+
+## C. Mass & Weight Assumptions
+
+### C1. Priority order for mass determination
+1. Explicit weight in grams (`Weight (g)`)
+2. Mass-based UOM (g/kg/mg × quantity)
+3. Size-class estimation (last resort)
+
+---
+
+### C2. Size-class mass estimation
+When no mass is available, the system:
+- Classifies parts into size classes based on keywords:
+  - micro (screws, washers)
+  - small (clips, sensors)
+  - medium (modules, housings)
+  - large (frames, large casings)
+  - bulk
+
+**Material density table is fixed**, e.g.:
+- Steel: 7.8 g/cm³
+- Aluminum: 2.7 g/cm³
+- Plastics: ~0.9–1.4 g/cm³
+- Electronics: 2.0 g/cm³
+- Assembly: 0.9 g/cm³
+- Unknown: 1.0 g/cm³
+
+**Rationale**
+- Ensures non-zero mass baseline
+- Avoids “free” components
+
+**Logged as**
+- `mass.estimated: size-class:<class> (<material_category>)`
+
+---
+
+## D. Material Identification Assumptions
+
+### D1. Material category inference
+**Rules**
+- Material category is inferred from:
+  1. Explicit material fields
+  2. Material text
+  3. Part name / description keywords
+
+**Important constraints**
+- Stainless steel is never collapsed into generic steel.
+- Polyamide (nylon) is never downgraded to polypropylene.
+- Mixed materials trigger `composite`.
+
+**Fallback**
+- If nothing matches → `material_category = unknown`
+
+**Rationale**
+- Avoids over-simplification
+- Preserves material hierarchy critical for PCF
+
+---
+
+### D2. Composite & assembly handling
+**Assumption**
+- Composite or assembly-like rows should not be forced onto pure material factors.
+
+**Result**
+- IDEMAT mapping may intentionally return `null`
+- A warning is added instead of a wrong factor
+
+---
+
+## E. Manufacturing Process Assumptions
+
+### E1. Process presence is mandatory
+**Assumption**
+- `manufacturing_process` is never left empty.
+
+**If missing**
+- A coarse process class is inferred based on:
+  - material category
+  - part keywords
+
+Examples:
+- Metal + milling/turning keywords → “Machining”
+- Plastic + housing/cover → “Injection molding”
+- Electronics → “Electronics assembly”
+- Assembly rows → “Manual/mechanical assembly”
+
+**Rationale**
+- Process is required later for scenario thinking
+- Baseline process ≠ final process
+
+**Logged as**
+- `process.inferred: <rule>`
+
+---
+
+### E2. Process precision assumption
+**Assumption**
+- Baseline process classification is *intentionally coarse*.
+
+**Meaning**
+- “Machining” ≠ milling vs turning vs drilling
+- Precision is deferred to human selection in Excel
+
+---
+
+## F. Manufacturing Location & Region Assumptions
+
+### F1. Manufacturing country
+**Priority order**
+1. Explicit manufacturing region/country field
+2. Manufacturing notes (“Made in …”)
+3. Fallback
+
+**Fallback**
+- If still unknown → `mfg_country_code = DE`
+
+**Rationale**
+- Provides a European industrial baseline
+- Avoids leaving region undefined
+
+**Logged as**
+- `mfg_country.assumed: DE`
+
+---
+
+### F2. Manufacturing region
+Derived deterministically from country:
+- Europe
+- Asia
+- North America
+- South America
+- Africa
+- Oceania
+
+**If not mappable**
+- `mfg_region = UNSPECIFIED`
+
+---
+
+## G. Destination & Transport Assumptions
+
+### G1. Destination (project country)
+**Priority order**
+1. Form input (project_country)
+2. Explicit tokens in `additional_note`
+3. Natural-language hints (“final assembly in …”)
+4. Fallback
+
+**Fallback**
+- `ship_to_country = UNSPECIFIED`
+
+---
+
+### G2. Transport distance
+**Rules**
+- If destination is UNSPECIFIED:
+  - distance = 0
+  - mode = road
+- If same country:
+  - distance = 400 km
+- If same continent:
+  - distance = 900 km
+- If intercontinental:
+  - distance = 7000 km
+
+**Rationale**
+- Produces a conservative, banded estimate
+- Avoids false precision
+
+---
+
+### G3. Transport mode
+**Hard rules**
+- Same-country transport can never be air or sea
+- Intercontinental defaults to sea
+- Air only allowed if:
+  - explicitly mentioned AND
+  - low mass (< 2 kg)
+
+**Rationale**
+- Prevents unrealistic baseline logistics
+- Keeps air freight exceptional
+
+---
+
+## H. End-of-Life (EoL) Assumptions
+
+### H1. Declared vs modeled EoL
+**Critical assumption**
+- `DeclaredByUser` with 0/0/0/100 is treated as **NOT truly declared**.
+
+**Meaning**
+- Placeholder landfill-only entries are overridden.
+
+---
+
+### H2. Modeled EoL logic
+If not truly declared:
+- EoL is derived from:
+  - region (based on destination or manufacturing)
+  - material family (steel, aluminum, plastics, etc.)
+
+Examples:
+- Europe + steel → ~95% recycle
+- Asia + plastics → low recycle, high landfill
+- Assembly → mixed handling
+
+**Fallback**
+- If region or material unknown:
+  - 100% landfill
+
+**Rationale**
+- Reflects regional infrastructure differences
+- Conservative for early-stage PCF
+
+---
+
+## I. IDEMAT Mapping Assumptions
+
+### I1. Material-first baseline
+**Assumption**
+- Baseline PCF uses **material production factors**, not process factors (yet).
+
+---
+
+### I2. One-shot lookup
+**Rule**
+- IDEMAT search is executed exactly once per part.
+
+**Rationale**
+- Prevents “search until something fits”
+- Forces transparent failure when no match exists
+
+---
+
+### I3. Region sensitivity
+**Examples**
+- Steel in Europe → prefer “steel market mix Europe”
+- Aluminum → prefer “aluminium” spelling always
+
+**Fallback**
+- If no compatible factor found:
+  - All `idemat_*` fields remain null
+  - Warning is added
+
+---
+
+## J. Cost Assumptions
+
+**Assumption**
+- If no unit cost is provided:
+  - unit_cost_eur = 0
+  - total_cost_eur = 0
+
+**Rationale**
+- PCF baseline should not invent economic data
+
+---
+
+## K. Summary of Baseline Assumption Philosophy
+
+In short, the baseline produced by this system assumes:
+
+- A **generic, conservative industrial reality**
+- **No optimization**
+- **No circularity by default**
+- **No supplier-specific advantages**
+- **No air freight unless explicitly justified**
+
+This makes the baseline:
+- Comparable across projects
+- Suitable as a reference point
+- A stable anchor for scenario exploration
+
+Any improvement (lighter material, better process, reuse, circular models) must **earn its benefit relative to this baseline**, which is exactly the intent of the system.
+
+--- 
 
