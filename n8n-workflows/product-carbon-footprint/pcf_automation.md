@@ -145,7 +145,7 @@ Enable structured comparison between:
 ---
 
 ## Sequence Diagram
-
+```mermaid
 sequenceDiagram
   participant U as User
   participant N as n8n Workflow
@@ -182,7 +182,7 @@ sequenceDiagram
 
   H->>S: Build scenarios material change manufacturing change business model change
   Note over H,S: Future extension adds R strategy comparison and break even analysis
-
+```
 ## Files and Data Flow
 
 ### Files
