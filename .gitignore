@@ -5,6 +5,13 @@
 .venv/
 venv/
 
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore internal notes
+internal/
+
 # Ignore combined md file & code
 combined_docs.md
 combined_markdown.py
