@@ -15,3 +15,5 @@ internal/
 # Ignore combined md file & code
 combined_docs.md
 combined_markdown.py
+ID.py
+sing.py
